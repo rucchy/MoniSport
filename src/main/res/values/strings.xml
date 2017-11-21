@@ -4,9 +4,9 @@
     <string name="btn_listado_sesiones">Ver listado de sesiones</string>
     <string name="btn_grabar">Grabar</string>
     <string name="btn_buscar_bt">Buscar dispositivos</string>
-    <string name="titulo_emparejados">Dispositivos emparejados</string>
+    <string name="titulo_emparejados">Dispositivos vinculados</string>
     <string name="titulo_descubiertos">Dispositivos disponibles</string>
-    <string name="none_paired">No hay dispositivos emparejados</string>
+    <string name="none_paired">No hay dispositivos vinculados</string>
     <string name="scanning">buscando dispositivos...</string>
     <string name="select_device">selecciona un dispositivo para conectar</string>
     <string name="none_found">No se encuentran dispositivos</string>
@@ -17,4 +17,5 @@
     <string name="titulo_listado">Selecciona una sesión para ver:</string>
     <string name="sincronizar">Sincronizado</string>
     <string name="desincronizar">Desincronizado</string>
+    <string name="ir_camara">Empezar sesión</string>
 </resources>

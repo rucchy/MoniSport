@@ -281,9 +281,12 @@ public class ConexionBluetooth extends AppCompatActivity {
             btClient.addConnectedEventListener(zl);
 
             if(btClient.IsConnected()) {
-
-
                 btClient.start();
+                Toast.makeText(getApplication(), "Conectado con dispositivo Zephyr",
+                        Toast.LENGTH_LONG).show();
+            }else{
+                Toast.makeText(getApplication(), "Fallo en la conexión con el dispositivo Zephyr",
+                        Toast.LENGTH_LONG).show();
             }
         }else if (device.getName().startsWith("SensorTag")) {
             mIsSensorTag2 = device.getName().startsWith("SensorTag2");
@@ -424,7 +427,7 @@ public class ConexionBluetooth extends AppCompatActivity {
         }
     };
     private void setStatus(String txt) {
-        Toast.makeText(this, txt, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, txt, Toast.LENGTH_LONG).show();
     }
 
     private void enableSensors(boolean f) {

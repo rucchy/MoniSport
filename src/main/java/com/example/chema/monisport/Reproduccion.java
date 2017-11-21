@@ -7,13 +7,16 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Display;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import com.example.chema.monisport.utils.customExoPlayerListener;
 import com.google.android.exoplayer2.ExoPlayerFactory;
@@ -70,6 +73,7 @@ public class Reproduccion  extends AppCompatActivity{
     private static HashMap graficas=new HashMap<String,GraphView>();
     private static LinearLayout scrollContainer;
     private ScrollView scrollGraficas;
+    private LinearLayout contenedor_botones_graficas;
     private static String nombreSesion;
     private SimpleExoPlayer mMediaPlayer;
     private SimpleExoPlayerView simpleExoPlayerView;
@@ -96,6 +100,7 @@ public class Reproduccion  extends AppCompatActivity{
         alto_deseado=(int)(ancho_deseado/1.5);
 
         scrollContainer=(LinearLayout) findViewById(R.id.scroll_container_reproductor);
+        contenedor_botones_graficas=(LinearLayout)findViewById(R.id.contenedor_botones_graficas_reproductor);
 
         File f=(File)intent.getExtras().get("Directorio");
         File[] filesCsv=f.listFiles();
@@ -116,167 +121,7 @@ public class Reproduccion  extends AppCompatActivity{
             String[] arrayDatos=arrayArchivo[0].split("_");
 
             if(arrayDatos[0].equals("DATOS")){
-                try{
-                    CSVReader reader = new CSVReader(new FileReader(dato));
-                    List<String[]> myEntries = reader.readAll();
-                    reader.close();
-                    Iterator it=myEntries.iterator();
-                    String nombreDatos;
-
-                    String[] d=(String[])it.next();
-                    nombreDatos=d[0];
-                    it.next();
-                    String[] d2=(String[])it.next();
-                    int cantidad=2;
-                    ArrayList<DataPoint> dataPointsX=new ArrayList<DataPoint>();
-                    ArrayList<DataPoint> dataPointsY=new ArrayList<DataPoint>();
-                    ArrayList<DataPoint> dataPointsZ=new ArrayList<DataPoint>();
-                    if(d2.length==3){
-                        cantidad=3;
-                    }else if(d2.length==4){
-                        cantidad=4;
-                    }
-
-                    while(it.hasNext()){
-                        String[] dd=(String[])it.next();
-
-                        double tiempo=Double.parseDouble(dd[0]);
-                        double x=Double.parseDouble(dd[1]);
-                        dataPointsX.add(new DataPoint(tiempo,x));
-                        if(cantidad==3){
-                            double y=Double.parseDouble(dd[2]);
-                            dataPointsY.add(new DataPoint(tiempo,y));
-                        }else if(cantidad==4){
-                            double y=Double.parseDouble(dd[2]);
-                            dataPointsY.add(new DataPoint(tiempo,y));
-                            double z=Double.parseDouble(dd[3]);
-                            dataPointsZ.add(new DataPoint(tiempo,z));
-                        }
-                    }
-                    GraphView nGraph = new GraphView(this);
-                    nGraph.getViewport().setXAxisBoundsManual(true);
-                    nGraph.getViewport().setMinX(-4);
-                    nGraph.getViewport().setMaxX(50);
-                    nGraph.getViewport().setScrollable(true);
-                    nGraph.setLayerType(View.LAYER_TYPE_HARDWARE,null);
-                    nGraph.setTitle(nombreDatos);
-                    nGraph.setBackgroundColor(Color.WHITE);
-                    nGraph.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,200));
-                    nGraph.getGridLabelRenderer().setNumHorizontalLabels(10);
-                    graficas.put(nombreDatos,nGraph);
-
-                    LineGraphSeries<DataPoint> series = new LineGraphSeries<>(dataPointsX.toArray(new DataPoint[dataPointsX.size()]));
-                    series.setOnDataPointTapListener(new OnDataPointTapListener() {
-                        @Override
-                        public void onTap(Series series, DataPointInterface dataPoint) {
-                            int segundoExtra=0;
-                            if(dataPoint.getX()%1>0.5){
-                                segundoExtra=1;
-                            }
-                            int segundo=(int)dataPoint.getX()+segundoExtra;
-                            Toast.makeText(getApplication(), "Segundo: "+segundo, Toast.LENGTH_SHORT).show();
-                            if(sincronizar){
-                                mMediaPlayer.seekTo((int)(dataPoint.getX()*1000));
-                                mMediaPlayer.setPlayWhenReady(false);
-                            }else{
-                                actualizarGraficas(dataPoint.getX());
-                            }
-
-                        }
-                    });
-                    nGraph.addSeries(series);
-
-
-                    if(cantidad==3){
-                        series.setTitle("x");
-                        LineGraphSeries<DataPoint> seriesy=new LineGraphSeries<>(dataPointsY.toArray(new DataPoint[dataPointsY.size()]));
-                        seriesy.setTitle("y");
-                        seriesy.setColor(Color.GREEN);
-                        nGraph.addSeries(seriesy);
-                        seriesy.setOnDataPointTapListener(new OnDataPointTapListener() {
-                            @Override
-                            public void onTap(Series series, DataPointInterface dataPoint) {
-                                int segundoExtra=0;
-                                if(dataPoint.getX()%1>0.5){
-                                    segundoExtra=1;
-                                }
-                                int segundo=(int)dataPoint.getX()+segundoExtra;
-                                Toast.makeText(getApplication(), "Segundo: "+segundo, Toast.LENGTH_SHORT).show();
-                                if(sincronizar){
-                                    mMediaPlayer.seekTo((int)(dataPoint.getX()*1000));
-                                    mMediaPlayer.setPlayWhenReady(false);
-                                }else{
-                                    actualizarGraficas(dataPoint.getX());
-                                }
-                            }
-                        });
-                    }else if(cantidad==4){
-                        series.setTitle("x");
-                        LineGraphSeries<DataPoint> seriesy=new LineGraphSeries<>(dataPointsY.toArray(new DataPoint[dataPointsY.size()]));
-                        seriesy.setTitle("y");
-                        seriesy.setColor(Color.GREEN);
-                        nGraph.addSeries(seriesy);
-                        seriesy.setOnDataPointTapListener(new OnDataPointTapListener() {
-                            @Override
-                            public void onTap(Series series, DataPointInterface dataPoint) {
-                                int segundoExtra=0;
-                                if(dataPoint.getX()%1>0.5){
-                                    segundoExtra=1;
-                                }
-                                int segundo=(int)dataPoint.getX()+segundoExtra;
-                                Toast.makeText(getApplication(), "Segundo: "+segundo, Toast.LENGTH_SHORT).show();
-                                if(sincronizar){
-                                    mMediaPlayer.seekTo((int)(dataPoint.getX()*1000));
-                                    mMediaPlayer.setPlayWhenReady(false);
-                                }else{
-                                    actualizarGraficas(dataPoint.getX());
-                                }
-                            }
-                        });
-                        LineGraphSeries<DataPoint> seriesz=new LineGraphSeries<>(dataPointsZ.toArray(new DataPoint[dataPointsZ.size()]));
-                        seriesz.setTitle("z");
-                        seriesz.setOnDataPointTapListener(new OnDataPointTapListener() {
-                            @Override
-                            public void onTap(Series series, DataPointInterface dataPoint) {
-                                int segundoExtra=0;
-                                if(dataPoint.getX()%1>0.5){
-                                    segundoExtra=1;
-                                }
-                                int segundo=(int)dataPoint.getX()+segundoExtra;
-                                Toast.makeText(getApplication(), "Segundo: "+segundo, Toast.LENGTH_SHORT).show();
-                                if(sincronizar){
-                                    mMediaPlayer.seekTo((int)(dataPoint.getX()*1000));
-                                    mMediaPlayer.setPlayWhenReady(false);
-                                }else{
-                                    actualizarGraficas(dataPoint.getX());
-                                }
-                            }
-                        });
-                        seriesz.setColor(Color.RED);
-                        nGraph.addSeries(seriesz);
-                    }
-                    if(cantidad>2){
-                        nGraph.getLegendRenderer().setVisible(true);
-                        nGraph.getLegendRenderer().setAlign(LegendRenderer.LegendAlign.BOTTOM);
-                    }
-                    DataPoint[] points = new DataPoint[2];
-                    points[0] = new DataPoint(0, nGraph.getViewport().getMinY(false));
-                    points[1] = new DataPoint(0,nGraph.getViewport().getMaxY(false));
-                    LineGraphSeries<DataPoint> seriesp = new LineGraphSeries<>(points);
-                    seriesp.setColor(Color.BLACK);
-                    nGraph.addSeries(seriesp);
-
-                    scrollGraficas=(ScrollView) findViewById(R.id.scroll_graficas_reproductor);
-                    ViewGroup.LayoutParams p=scrollGraficas.getLayoutParams();
-                    p.width=width_pantalla-ancho_deseado;
-                    p.height=ancho_deseado;
-                    scrollGraficas.setLayoutParams(p);
-                    scrollContainer.addView(nGraph);
-
-                }catch (Exception e){
-                    Log.e(TAG,"Exception "+e);
-                }
-
+                crearGrafica(dato);
             }else if(arrayDatos[0].equals("VID")){
                 BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
                 TrackSelection.Factory videoTrackSelectionFactory =
@@ -316,9 +161,11 @@ public class Reproduccion  extends AppCompatActivity{
             public void onClick(View v) {
                 if (sincronizar) {
                     btnSincronizar.setText(getResources().getString(R.string.desincronizar));
+                    btnSincronizar.setCompoundDrawablesWithIntrinsicBounds(null,null,getResources().getDrawable(R.drawable.ic_sincro_unlink),null);
                     sincronizar=false;
                 }else{
                     btnSincronizar.setText(getResources().getString(R.string.sincronizar));
+                    btnSincronizar.setCompoundDrawablesWithIntrinsicBounds(null,null,getResources().getDrawable(R.drawable.ic_sincro_link),null);
                     sincronizar=true;
                 }
             }
@@ -479,5 +326,161 @@ public class Reproduccion  extends AppCompatActivity{
             }
         }
         return decimal.format(valor);
+    }
+
+    private void crearGrafica(File dato){
+        try{
+            CSVReader reader = new CSVReader(new FileReader(dato));
+            List<String[]> myEntries = reader.readAll();
+            reader.close();
+            Iterator it=myEntries.iterator();
+            String nombreDatos;
+
+            String[] d=(String[])it.next();
+            nombreDatos=d[0];
+            it.next();
+            String[] d2=(String[])it.next();
+            int cantidad=2;
+            ArrayList<DataPoint> dataPointsX=new ArrayList<DataPoint>();
+            ArrayList<DataPoint> dataPointsY=new ArrayList<DataPoint>();
+            ArrayList<DataPoint> dataPointsZ=new ArrayList<DataPoint>();
+            if(d2.length==3){
+                cantidad=3;
+            }else if(d2.length==4){
+                cantidad=4;
+            }
+
+            while(it.hasNext()){
+                String[] dd=(String[])it.next();
+
+                double tiempo=Double.parseDouble(dd[0]);
+                double x=Double.parseDouble(dd[1]);
+                dataPointsX.add(new DataPoint(tiempo,x));
+                if(cantidad==3){
+                    double y=Double.parseDouble(dd[2]);
+                    dataPointsY.add(new DataPoint(tiempo,y));
+                }else if(cantidad==4){
+                    double y=Double.parseDouble(dd[2]);
+                    dataPointsY.add(new DataPoint(tiempo,y));
+                    double z=Double.parseDouble(dd[3]);
+                    dataPointsZ.add(new DataPoint(tiempo,z));
+                }
+            }
+            GraphView nGraph = new GraphView(this);
+            nGraph.getViewport().setXAxisBoundsManual(true);
+            nGraph.getViewport().setMinX(-4);
+            nGraph.getViewport().setMaxX(50);
+            nGraph.getViewport().setScrollable(true);
+            nGraph.setLayerType(View.LAYER_TYPE_HARDWARE,null);
+            nGraph.setTitle(nombreDatos);
+            nGraph.setBackgroundColor(Color.WHITE);
+            nGraph.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,200));
+            nGraph.getGridLabelRenderer().setNumHorizontalLabels(10);
+            graficas.put(nombreDatos,nGraph);
+
+            LineGraphSeries<DataPoint> series = new LineGraphSeries<>(dataPointsX.toArray(new DataPoint[dataPointsX.size()]));
+            series.setOnDataPointTapListener(new OnDataPointTapListener() {
+                @Override
+                public void onTap(Series series, DataPointInterface dataPoint) {
+                    consultarDato(dataPoint);
+                }
+            });
+            nGraph.addSeries(series);
+
+
+            if(cantidad==3){
+                series.setTitle("x");
+                LineGraphSeries<DataPoint> seriesy=new LineGraphSeries<>(dataPointsY.toArray(new DataPoint[dataPointsY.size()]));
+                seriesy.setTitle("y");
+                seriesy.setColor(Color.GREEN);
+                nGraph.addSeries(seriesy);
+
+            }else if(cantidad==4){
+                series.setTitle("x");
+                LineGraphSeries<DataPoint> seriesy=new LineGraphSeries<>(dataPointsY.toArray(new DataPoint[dataPointsY.size()]));
+                seriesy.setTitle("y");
+                seriesy.setColor(Color.GREEN);
+                nGraph.addSeries(seriesy);
+
+                LineGraphSeries<DataPoint> seriesz=new LineGraphSeries<>(dataPointsZ.toArray(new DataPoint[dataPointsZ.size()]));
+                seriesz.setTitle("z");
+
+                seriesz.setColor(Color.RED);
+                nGraph.addSeries(seriesz);
+            }
+            if(cantidad>2){
+                nGraph.getLegendRenderer().setVisible(true);
+                nGraph.getLegendRenderer().setAlign(LegendRenderer.LegendAlign.BOTTOM);
+            }
+            DataPoint[] points = new DataPoint[2];
+            points[0] = new DataPoint(0, nGraph.getViewport().getMinY(false));
+            points[1] = new DataPoint(0,nGraph.getViewport().getMaxY(false));
+            LineGraphSeries<DataPoint> seriesp = new LineGraphSeries<>(points);
+            seriesp.setColor(Color.BLACK);
+            nGraph.addSeries(seriesp);
+
+            scrollGraficas=(ScrollView) findViewById(R.id.scroll_graficas_reproductor);
+            ViewGroup.LayoutParams p=scrollGraficas.getLayoutParams();
+            p.width=width_pantalla-ancho_deseado;
+            p.height=ancho_deseado;
+            scrollGraficas.setLayoutParams(p);
+            nGraph.setId(scrollContainer.getChildCount());
+            scrollContainer.addView(nGraph);
+
+            crearBtnGrafica(nombreDatos);
+
+        }catch (Exception e){
+            Log.e(TAG,"Exception "+e);
+        }
+    }
+    private void consultarDato(DataPointInterface dataPoint){
+        int segundoExtra=0;
+        if(dataPoint.getX()%1>0.5){
+            segundoExtra=1;
+        }
+        int segundo=(int)dataPoint.getX()+segundoExtra;
+        Toast.makeText(getApplication(), "Segundo: "+segundo, Toast.LENGTH_SHORT).show();
+        if(sincronizar){
+            mMediaPlayer.seekTo((int)(dataPoint.getX()*1000));
+            mMediaPlayer.setPlayWhenReady(false);
+        }else{
+            actualizarGraficas(dataPoint.getX());
+        }
+    }
+    private void crearBtnGrafica(String nombre){
+        final ToggleButton btnG= new ToggleButton(this);
+        btnG.setBackgroundResource(R.drawable.button_inverso);
+        btnG.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        btnG.setTextColor(getResources().getColor(R.color.colorPrimary));
+        float scale = getResources().getDisplayMetrics().density;
+        int dpAsPixels = (int) (10*scale + 0.5f);
+        btnG.setPadding(dpAsPixels,0,dpAsPixels,0);
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.setMargins(0, 0, dpAsPixels, 0);
+        btnG.setLayoutParams(params);
+        btnG.setCompoundDrawablesWithIntrinsicBounds(null, null,getResources().getDrawable(R.drawable.ic_visible) ,null);
+        btnG.setText(nombre);
+        btnG.setTextOn(nombre);
+        btnG.setTextOff(nombre);
+        btnG.setChecked(true);
+        btnG.setId(contenedor_botones_graficas.getChildCount());
+        btnG.setOnClickListener(new View.OnClickListener() {@Override public void onClick(View v) {}});
+
+        contenedor_botones_graficas.addView(btnG);
+
+        btnG.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if(b) {
+                    btnG.setCompoundDrawablesWithIntrinsicBounds(null, null,getResources().getDrawable(R.drawable.ic_visible) ,null);
+                    scrollContainer.findViewById(btnG.getId()).setVisibility(View.VISIBLE);
+                }else {
+                    btnG.setCompoundDrawablesWithIntrinsicBounds(null, null,getResources().getDrawable(R.drawable.ic_invisible) ,null);
+                    scrollContainer.findViewById(btnG.getId()).setVisibility(View.GONE);
+                }
+            }
+        });
     }
 }

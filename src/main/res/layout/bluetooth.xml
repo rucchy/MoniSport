@@ -1,29 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="10dp">
-    <Button
-        android:id="@+id/button_ir_camara"
-        android:text="Ir a la camara"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        />
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/select_device"
         android:textSize="20sp"
         android:id="@+id/texto_info"
+        android:layout_alignParentTop="true"
         />
 
     <Button
         android:id="@+id/buttonSearch"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/btn_buscar_bt"/>
+        android:layout_below="@id/texto_info"
+        android:layout_marginBottom="10dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/button_inverso"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:text="@string/btn_buscar_bt"
+        android:textColor="@color/colorPrimary"
+        android:textSize="16sp" />
 
     <TextView
         android:layout_width="match_parent"
@@ -31,11 +34,13 @@
         android:background="@drawable/border_bottom"
         android:text="@string/titulo_emparejados"
         android:id="@+id/title_paired_devices"
-        android:textSize="16sp"/>
+        android:textSize="16sp"
+        android:layout_below="@id/buttonSearch"/>
     <ListView
         android:id="@+id/listViewPaired"
         android:layout_width="match_parent"
         android:layout_height="120dp"
+        android:layout_below="@id/title_paired_devices"
         />
 
     <TextView
@@ -45,11 +50,27 @@
         android:background="@drawable/border_bottom"
         android:textSize="16sp"
         android:id="@+id/title_new_devices"
+        android:layout_below="@id/listViewPaired"
         />
     <ListView
         android:id="@+id/listViewDetected"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="wrap_content"
+        android:layout_below="@id/title_new_devices"/>
 
+    <Button
+        android:id="@+id/button_ir_camara"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerInParent="true"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/button_inverso"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:text="@string/ir_camara"
+        android:textColor="@color/colorPrimary"
+        android:textSize="16sp" />
 
-</LinearLayout>
+</RelativeLayout>

@@ -12,15 +12,18 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.hardware.Camera;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Display;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
+import android.widget.ToggleButton;
 
 import com.example.chema.monisport.SensorTag.BarometerCalibrationCoefficients;
 import com.example.chema.monisport.SensorTag.SensorTag;
@@ -70,10 +73,12 @@ public class Grabacion extends AppCompatActivity {
     private static final double PA_PER_METER = 12.0;
     private static HashMap graficas=new HashMap<String,GraphView>();
     private static LinearLayout scrollContainer;
+    private static LinearLayout contenedor_botones_graficas;
     private static boolean viendose=false;
     private static Context c;
     private ScrollView scrollGraficas;
     private static String nombreSesion;
+    private SimpleOrientationListener mOrientationListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,6 +100,7 @@ public class Grabacion extends AppCompatActivity {
         preview = (LinearLayout) findViewById(R.id.camera_preview);
 
         scrollContainer=(LinearLayout) findViewById(R.id.scroll_container);
+        contenedor_botones_graficas=(LinearLayout)findViewById(R.id.contenedor_botones_graficas);
 
         setup();
 
@@ -116,7 +122,7 @@ public class Grabacion extends AppCompatActivity {
         btn.setLayerType(View.LAYER_TYPE_HARDWARE,null);
 
 
-        SimpleOrientationListener mOrientationListener = new SimpleOrientationListener(
+        mOrientationListener = new SimpleOrientationListener(
              this   ) {
             @Override
             public void onSimpleOrientationChanged(int orientation) {
@@ -332,7 +338,9 @@ public class Grabacion extends AppCompatActivity {
         preview.getLayoutParams().width=ancho_deseado;
         preview.getLayoutParams().height=alto_deseado;
         preview.addView(mPreview);
-
+        if(mOrientationListener!=null){
+            mOrientationListener.enable();
+        }
 
     }
     private void setdown(){
@@ -348,6 +356,7 @@ public class Grabacion extends AppCompatActivity {
             mCamera.release();
             mCamera=null;
         }
+        mOrientationListener.disable();
 
     }
     private void startGraph(){
@@ -711,8 +720,11 @@ public class Grabacion extends AppCompatActivity {
         nGraph.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,200));
         nGraph.getGridLabelRenderer().setNumHorizontalLabels(10);
         graficas.put(nombre,nGraph);
-
+        nGraph.setId(scrollContainer.getChildCount());
         scrollContainer.addView(nGraph);
+
+        crearBtnGrafica(nombre);
+
     }
 
     private void setDatosGrafica(String nombre, String dato){
@@ -787,5 +799,42 @@ public class Grabacion extends AppCompatActivity {
                 ((GraphView)v).setLayoutParams(params);
             }
         }
+    }
+
+    private void crearBtnGrafica(String nombre){
+        final ToggleButton btnG= new ToggleButton(c);
+        btnG.setBackgroundResource(R.drawable.button_inverso);
+        btnG.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        btnG.setTextColor(c.getResources().getColor(R.color.colorPrimary));
+        float scale = c.getResources().getDisplayMetrics().density;
+        int dpAsPixels = (int) (10*scale + 0.5f);
+        btnG.setPadding(dpAsPixels,0,dpAsPixels,0);
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        params.setMargins(0, 0, dpAsPixels, 0);
+        btnG.setLayoutParams(params);
+        btnG.setCompoundDrawablesWithIntrinsicBounds(null, null,c.getResources().getDrawable(R.drawable.ic_visible) ,null);
+        btnG.setText(nombre);
+        btnG.setTextOn(nombre);
+        btnG.setTextOff(nombre);
+        btnG.setChecked(true);
+        btnG.setId(contenedor_botones_graficas.getChildCount());
+        btnG.setOnClickListener(new View.OnClickListener() {@Override public void onClick(View v) {}});
+
+        contenedor_botones_graficas.addView(btnG);
+
+        btnG.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if(b) {
+                    btnG.setCompoundDrawablesWithIntrinsicBounds(null, null,c.getResources().getDrawable(R.drawable.ic_visible) ,null);
+                    scrollContainer.findViewById(btnG.getId()).setVisibility(View.VISIBLE);
+                }else {
+                    btnG.setCompoundDrawablesWithIntrinsicBounds(null, null,c.getResources().getDrawable(R.drawable.ic_invisible) ,null);
+                    scrollContainer.findViewById(btnG.getId()).setVisibility(View.GONE);
+                }
+            }
+        });
     }
 }
