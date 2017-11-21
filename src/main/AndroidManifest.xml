@@ -49,7 +49,8 @@
         </activity>
         <activity android:name=".ConexionBluetooth"
             android:screenOrientation="landscape"></activity>
-        <activity android:name=".ListadoSesiones"></activity>
+        <activity android:name=".ListadoSesiones"
+            android:icon="@drawable/icono_48"></activity>
     </application>
 
 </manifest>

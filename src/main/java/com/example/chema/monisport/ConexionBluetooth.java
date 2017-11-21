@@ -111,9 +111,11 @@ public class ConexionBluetooth extends AppCompatActivity {
         conectados = new HashMap<String, BluetoothService>();
         // Setup the window
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setIcon(R.mipmap.launcher_monisport);
         setContentView(R.layout.bluetooth);
 
-
+        final Bundle bundle_datos_deportista=this.getIntent().getExtras();
 
         // Set result CANCELED in case the user backs out
         setResult(Activity.RESULT_CANCELED);
@@ -186,6 +188,7 @@ public class ConexionBluetooth extends AppCompatActivity {
         btn.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
                 Intent intent = new Intent (v.getContext(), Grabacion.class);
+                intent.putExtras(bundle_datos_deportista);
                 startActivity(intent);
             }
         });

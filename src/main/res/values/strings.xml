@@ -18,4 +18,11 @@
     <string name="sincronizar">Sincronizado</string>
     <string name="desincronizar">Desincronizado</string>
     <string name="ir_camara">Empezar sesión</string>
+    <string name="edad">Edad:</string>
+    <string name="nombre">Nombre y Apellidos:</string>
+    <string name="peso">Peso:</string>
+    <string name="altura">Altura:</string>
+    <string name="btn_guardar">Guardar</string>
+    <string name="btn_volver">Cancelar</string>
+    <string name="msg_datos">Introduce los datos del deportista</string>
 </resources>

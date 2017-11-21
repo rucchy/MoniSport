@@ -89,6 +89,8 @@ public class Reproduccion  extends AppCompatActivity{
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setIcon(R.mipmap.launcher_monisport);
         setContentView(R.layout.reproductor);
         Intent intent = getIntent();
 

@@ -8,9 +8,11 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+import java.io.BufferedReader;
 import java.io.File;
 import com.example.chema.monisport.utils.flechaAdapter;
 
+import java.io.FileReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -33,7 +35,8 @@ public class ListadoSesiones extends AppCompatActivity {
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setIcon(R.mipmap.launcher_monisport);
         setContentView(R.layout.listado_sesiones);
 
         File f = new File("/storage/emulated/0/MoniSport/Session/");
@@ -70,6 +73,7 @@ public class ListadoSesiones extends AppCompatActivity {
                     String nuevoDateFormat = new SimpleDateFormat("dd/MM/yyyy' a las 'HH:mm").format(date);
                     File[] filesCsv=file.listFiles();
                     String contenido = "\nDatos:";
+                    String info_deportista ="";
                     for (int o = 0; o < filesCsv.length; o++){
                         File dato=filesCsv[o];
                         String nombreArchivo=dato.getName();
@@ -80,15 +84,26 @@ public class ListadoSesiones extends AppCompatActivity {
                             contenido+=" "+arrayDatos[1]+",";
                         }else if(arrayDatos[0].equals("VID")){
                             contenido+=" Video,";
+                        }else if(arrayDatos[0].equals("INFORMACION")){
+                            try{
+                                BufferedReader br = new BufferedReader(new FileReader(dato));
+                                String line;
+                                String aux="";
+                                info_deportista="Información del deportista: ";
+                                while ((line = br.readLine()) != null) {
+                                    info_deportista+=line+aux;
+                                    aux="\n";
+                                }
+                                br.close();
+                            }catch (Exception e){
+                            }
                         }
-
-
                     }
                     if(contenido.endsWith(",")){
                         contenido=contenido.substring(0,contenido.length() - 1);
                     }
                     String ruta="\nAlmacenada en: "+f.getPath()+"/"+nombre+"/";
-                    String titulo="Sesión del "+nuevoDateFormat+contenido+ruta;
+                    String titulo="Sesión del "+nuevoDateFormat+contenido+ruta+"\n"+info_deportista;
                     item.add(titulo );
                 }catch (ParseException ex)
                 {

@@ -23,6 +23,7 @@ import android.widget.LinearLayout;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.example.chema.monisport.SensorTag.BarometerCalibrationCoefficients;
@@ -79,16 +80,22 @@ public class Grabacion extends AppCompatActivity {
     private ScrollView scrollGraficas;
     private static String nombreSesion;
     private SimpleOrientationListener mOrientationListener;
+    private String[] datos_deportista;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setIcon(R.mipmap.launcher_monisport);
         c=this;
         setContentView(R.layout.camera);
         setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         orientacionAnt=1;
         // Create an instance of Camera
         mCamera = getCameraInstance();
+
+        Bundle b=this.getIntent().getExtras();
+        datos_deportista=b.getStringArray("datos_deportista");
 
         Display display =  getWindowManager().getDefaultDisplay();
         Point size = new Point();
@@ -192,9 +199,10 @@ public class Grabacion extends AppCompatActivity {
                     releaseMediaRecorder();
                     stopGraph();
                     mCamera.lock();
+                    guardarDatosDeportista();
                     btn.setText("Grabar");
                     isRecording = false;
-
+                    Toast.makeText(Grabacion.this, "Guardado", Toast.LENGTH_SHORT).show();
                 }else{
                     if(prepareVideoRecorder()){
                         mediaRecorder.start();
@@ -423,30 +431,6 @@ public class Grabacion extends AppCompatActivity {
             }catch (Exception e){
             }
         }
-        /*Iterator itdatos = datosArray.entrySet().iterator();
-        while(itdatos.hasNext()) {
-            List<String[]> data = new ArrayList<String[]>();
-            HashMap.Entry pair = (HashMap.Entry) itdatos.next();
-            String nombre=(String)pair.getKey();
-            data.add(new String[]{nombre});
-            ArrayList<Pair<Double,String>> g=(ArrayList<Pair<Double,String>>) pair.getValue();
-            Iterator valores=g.iterator();
-            while(valores.hasNext()){
-                Pair<Double,String> p=(Pair<Double,String>)valores.next();
-                data.add(new String[]{String.valueOf((double) Math.round(p.first*1000)/1000),String.valueOf(p.second.replace(",",".").replace("\n"," "))});
-            }
-            g.clear();
-            //Guardamos los datos en un csv
-            File mediaStorageDir = new File(nombreSesion);
-            String filePath = mediaStorageDir.getPath() + File.separator +"DATOS_"+nombre+".csv";
-            CSVWriter writer;
-            try{
-                writer = new CSVWriter(new FileWriter(filePath));
-                writer.writeAll(data,true);
-                writer.close();
-            }catch (Exception e){
-            }
-        }*/
 
         mHandler.removeCallbacks(mTimer2);
     }
@@ -836,5 +820,25 @@ public class Grabacion extends AppCompatActivity {
                 }
             }
         });
+    }
+    private void guardarDatosDeportista(){
+        try{
+            File mediaStorageDir = new File(nombreSesion);
+            File archivo = new File(mediaStorageDir,"INFORMACION_DEPORTISTA.txt");
+            FileWriter writer = new FileWriter(archivo);
+            String linea="Nombre y apellidos: " +datos_deportista[0];
+            writer.append(linea);
+            linea=", Edad: " +datos_deportista[1];
+            writer.append(linea);
+            linea=", Altura: " +datos_deportista[2];
+            writer.append(linea);
+            linea="y Peso: " +datos_deportista[3];
+            writer.append(linea);
+            writer.flush();
+            writer.close();
+        }catch (Exception e){
+
+        }
+
     }
 }
