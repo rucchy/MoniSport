@@ -171,12 +171,11 @@ public class BluetoothService extends Service {
             text1 = _aNewHandler.obtainMessage(Constantes.BAROMETER_SENSORTAG);
             b1.putByteArray("BAROMETER",characteristic.getValue());
         }
-
+        Log.d(TAG,"asd");
         text1.setData(b1);
         mBusy = false;
 
         _aNewHandler.sendMessage(text1);
-
 
     }
 
@@ -191,7 +190,7 @@ public class BluetoothService extends Service {
         }
 
         if (mBusy) {
-            // Log.w(TAG, "LeService busy");
+            Log.w(TAG, "LeService busy");
             return false;
         }
         return true;
@@ -430,26 +429,26 @@ public class BluetoothService extends Service {
             // Previously connected device. Try to reconnect.
             if (mBluetoothDeviceAddress != null
                     && address.equals(mBluetoothDeviceAddress) && mBluetoothGatt != null) {
-                 Log.d(TAG, "Re-use GATT connection");
+                 //Log.d(TAG, "Re-use GATT connection");
                 if (mBluetoothGatt.connect()) {
                     return true;
                 } else {
-                     Log.w(TAG, "GATT re-connect failed.");
+                    // Log.w(TAG, "GATT re-connect failed.");
                     return false;
                 }
             }
 
             if (device == null) {
-                 Log.w(TAG, "Device not found.  Unable to connect.");
+                // Log.w(TAG, "Device not found.  Unable to connect.");
                 return false;
             }
             // We want to directly connect to the device, so we are setting the
             // autoConnect parameter to false.
-             Log.d(TAG, "Create a new GATT connection.");
+            // Log.d(TAG, "Create a new GATT connection.");
             mBluetoothGatt = device.connectGatt(this, false, mGattCallbacks);
             mBluetoothDeviceAddress = address;
         } else {
-             Log.w(TAG, "Attempt to connect in state: " + connectionState);
+            // Log.w(TAG, "Attempt to connect in state: " + connectionState);
             return false;
         }
         return true;

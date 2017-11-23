@@ -49,13 +49,10 @@ public class ZephyrListener extends ConnectListenerImpl{
     }
     public void Connected(ConnectedEvent<BTClient> eventArgs) {
         Log.d(TAG,String.format("Connected to BioHarness %s.", eventArgs.getSource().getDevice().getName()));
-		/*Use this object to enable or disable the different Packet types*/
         RqPacketType.GP_ENABLE = true;
         RqPacketType.BREATHING_ENABLE = true;
         RqPacketType.LOGGING_ENABLE = true;
 
-
-        //Creates a new ZephyrProtocol object and passes it the BTComms object
         ZephyrProtocol _protocol = new ZephyrProtocol(eventArgs.getSource().getComms(), RqPacketType);
         _protocol.addZephyrPacketEventListener(new ZephyrPacketListener() {
             public void ReceivedPacket(ZephyrPacketEvent eventArgs) {
@@ -63,12 +60,11 @@ public class ZephyrListener extends ConnectListenerImpl{
                 byte CRCFailStatus;
                 byte RcvdBytes;
 
-
-
                 CRCFailStatus = msg.getCRCStatus();
                 RcvdBytes = msg.getNumRvcdBytes() ;
                 int MsgID = msg.getMsgID();
                 byte [] DataArray = msg.getBytes();
+
                 switch (MsgID)
                 {
 

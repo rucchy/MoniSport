@@ -325,12 +325,12 @@ public class Grabacion extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
         preview.removeAllViews();
         if(mCamera==null){
             mCamera=getCameraInstance();
         }
         setup();
+        graficas.clear();
         viendose=true;
 
     }
@@ -532,9 +532,6 @@ public class Grabacion extends AppCompatActivity {
         return handlerDatos;
     }
 
-    /**
-     * The Handler that gets information back from the BluetoothChatService
-     */
     private final Handler handlerDatos = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -597,20 +594,21 @@ public class Grabacion extends AppCompatActivity {
                         }
                         //Log.d(TAG, "Aceleration Rate Info is " + PeakAccText);
                         break;*/
-                    /*case Constantes.ACCLERATION_SENSORTAG:
-                        if(!datos.containsKey("Aceleracion")){
-                            crearTabla("Aceleracion",3);
+                    case Constantes.ACCLERATION_SENSORTAG:
+                        if(!graficas.containsKey("Acelerometro")){
+                            crearGrafica("Acelerometro");
                         }
-                        if(isRecording){
+                        if(isRecording) {
                             rawValue = msg.getData().getByteArray("Acelerometro");
                             v = SensorTag.ACCELEROMETER.convert(rawValue);
-                            mensaje = "x: "+decimal.format(v.x) + "\ny: " + decimal.format(v.y) + "\nz: "
-                                    + decimal.format(v.z) + "\n";
-                            setDatos("Aceleracion",mensaje);
-                        }
+                            double x= Double.parseDouble(decimal.format(v.x).replace(",", ".").replace("+",""));
+                            double y= Double.parseDouble(decimal.format(v.y).replace(",", ".").replace("+",""));
+                            double z= Double.parseDouble(decimal.format(v.z).replace(",", ".").replace("+",""));
+                            double datos[]={x,y,z};
+                            setDatosGrafica("Acelerometro",datos);
 
-                        //Log.d(TAG, "Acelerometro: " + mensaje);
-                        break;*/
+                        }//Log.d(TAG, "MAGNETOMETER: " + mensaje);
+                        break;
                     case Constantes.MAGNETOMETER_SENSORTAG:
                         if(!graficas.containsKey("Magnetometro")){
                             crearGrafica("Magnetometro");
@@ -706,7 +704,6 @@ public class Grabacion extends AppCompatActivity {
         graficas.put(nombre,nGraph);
         nGraph.setId(scrollContainer.getChildCount());
         scrollContainer.addView(nGraph);
-
         crearBtnGrafica(nombre);
 
     }
@@ -832,7 +829,7 @@ public class Grabacion extends AppCompatActivity {
             writer.append(linea);
             linea=", Altura: " +datos_deportista[2];
             writer.append(linea);
-            linea="y Peso: " +datos_deportista[3];
+            linea=" y Peso: " +datos_deportista[3];
             writer.append(linea);
             writer.flush();
             writer.close();

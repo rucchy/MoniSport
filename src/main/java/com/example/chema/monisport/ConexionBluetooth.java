@@ -79,8 +79,8 @@ public class ConexionBluetooth extends AppCompatActivity {
     private TextView texto_info;
     private ProgressDialog dialog;
     private HashMap conectados;
-    private ZephyrListener zl;
-    private BTClient btClient;
+    private ZephyrListener zl = null;
+    private BTClient btClient = null;
     private BluetoothService mBluetoothLeService = null;
     private static BluetoothManager mBluetoothManager;
     private BluetoothGatt mBtGatt = null;
@@ -90,7 +90,7 @@ public class ConexionBluetooth extends AppCompatActivity {
     private List<SensorTag> mEnabledSensors = new ArrayList<SensorTag>();
     private boolean mMagCalibrateRequest = true;
     private boolean mHeightCalibrateRequest = true;
-    private static final int GATT_TIMEOUT = 250; // milliseconds
+    private static final int GATT_TIMEOUT = 1000; // milliseconds
 
 
     private BluetoothGattService mOadService = null;
@@ -182,7 +182,7 @@ public class ConexionBluetooth extends AppCompatActivity {
 
         startBluetoothLeService();
         // Create GATT object
-        mServiceList = new ArrayList<BluetoothGattService>();
+        //mServiceList = new ArrayList<BluetoothGattService>();
 
         Button btn = (Button) findViewById(R.id.button_ir_camara);
         btn.setOnClickListener(new View.OnClickListener() {
@@ -211,6 +211,21 @@ public class ConexionBluetooth extends AppCompatActivity {
             mBluetoothLeService.close();
             mBluetoothLeService = null;
         }
+        if(btClient!=null && btClient.IsConnected()){
+            btClient.Close();
+        }
+
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (mBluetoothLeService != null) {
+            mBluetoothLeService.close();
+        }
+        if(btClient!=null && btClient.IsConnected()){
+            btClient.Close();
+        }
 
     }
 
@@ -218,7 +233,7 @@ public class ConexionBluetooth extends AppCompatActivity {
      * Start device discover with the BluetoothAdapter
      */
     private void doDiscovery() {
-        Log.d(TAG, "doDiscovery()");
+        //Log.d(TAG, "doDiscovery()");
 
         mNewDevicesArrayAdapter.clear();
         // Indicate scanning in the title
@@ -293,14 +308,13 @@ public class ConexionBluetooth extends AppCompatActivity {
             }
         }else if (device.getName().startsWith("SensorTag")) {
             mIsSensorTag2 = device.getName().startsWith("SensorTag2");
+
             mBluetoothLeService.setHandler(mHandler);
             mBluetoothLeService.initialize();
-
+           
             boolean ok = mBluetoothLeService.connect(address);
-            if (!ok) {
-               Log.d(TAG,"NO");
-            }
-
+            Toast.makeText(getApplication(), "Conectando con dispositivo",
+                    Toast.LENGTH_LONG).show();
             // Initialize sensor list
             updateSensorList();
             registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
@@ -315,15 +329,11 @@ public class ConexionBluetooth extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            // When discovery finds a device
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                // Get the BluetoothDevice object from the Intent
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                // If it's already paired, skip it, because it's been listed already
                 if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
                     mNewDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
                 }
-                // When discovery is finished, change the Activity title
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 texto_info.setText(R.string.select_device);
                 if (mNewDevicesArrayAdapter.getCount() == 0) {
@@ -341,7 +351,8 @@ public class ConexionBluetooth extends AppCompatActivity {
                     mBtGatt = BluetoothService.getBtGatt();
                     mBtGatt.discoverServices();
                 } else
-                    setStatus("Connect failed. Status: " + status);
+                    Toast.makeText(getApplication(), "Connect failed. Status: " + status,
+                            Toast.LENGTH_LONG).show();
             }
         }
     };
@@ -398,11 +409,12 @@ public class ConexionBluetooth extends AppCompatActivity {
 
             if (BluetoothService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 if (status == BluetoothGatt.GATT_SUCCESS) {
-                    setStatus("Descubrimiento de servicio completado");
-                    displayServices();
-                    checkOad();
+                    Toast.makeText(getApplication(), "Descubrimiento de servicio completado",
+                            Toast.LENGTH_LONG).show();
+                    //displayServices();
+                    //checkOad();
                     enableDataCollection(true);
-                    getFirmwareRevison();
+                    //getFirmwareRevison();
                 } else {
                     Toast.makeText(getApplication(), "Fallo en el descubrimiento de servicio",
                             Toast.LENGTH_LONG).show();
@@ -425,13 +437,11 @@ public class ConexionBluetooth extends AppCompatActivity {
             }
 
             if (status != BluetoothGatt.GATT_SUCCESS) {
-                setStatus("GATT error code: " + status);
+                Toast.makeText(getApplication(), "Descubrimiento de servicio completado"+ status,
+                        Toast.LENGTH_LONG).show();
             }
         }
     };
-    private void setStatus(String txt) {
-        Toast.makeText(this, txt, Toast.LENGTH_LONG).show();
-    }
 
     private void enableSensors(boolean f) {
         final boolean enable = f;
@@ -443,11 +453,15 @@ public class ConexionBluetooth extends AppCompatActivity {
             // Skip keys
             if (confUuid == null)
                 break;
-
             if (!mIsSensorTag2) {
                 // Barometer calibration
                 if (confUuid.equals(SensorTagGatt.UUID_BAR_CONF) && enable) {
                     calibrateBarometer();
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
 
@@ -456,10 +470,17 @@ public class ConexionBluetooth extends AppCompatActivity {
                 BluetoothGattCharacteristic charac = serv.getCharacteristic(confUuid);
                 byte value = enable ? sensor.getEnableSensorCode()
                         : SensorTag.DISABLE_SENSOR_CODE;
+
                 if (mBluetoothLeService.writeCharacteristic(charac, value)) {
-                    mBluetoothLeService.waitIdle(GATT_TIMEOUT);
+                    mBluetoothLeService.waitIdle(500);
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 } else {
-                    setStatus("Sensor config failed: " + serv.getUuid().toString());
+                    Toast.makeText(getApplication(), "Sensor config failed: " + serv.getUuid().toString(),
+                            Toast.LENGTH_LONG).show();
                     break;
                 }
             }
@@ -477,14 +498,15 @@ public class ConexionBluetooth extends AppCompatActivity {
                 BluetoothGattCharacteristic charac = serv.getCharacteristic(dataUuid);
 
                 if (mBluetoothLeService.setCharacteristicNotification(charac, enable)) {
-                    mBluetoothLeService.waitIdle(GATT_TIMEOUT);
+                    mBluetoothLeService.waitIdle(500);
                     try {
-                        Thread.sleep(50);
+                        Thread.sleep(500);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 } else {
-                    setStatus("Sensor notification failed: " + serv.getUuid().toString());
+                    Toast.makeText(getApplication(), "Sensor notification failed: " + serv.getUuid().toString(),
+                            Toast.LENGTH_LONG).show();
                     break;
                 }
             }
@@ -518,11 +540,21 @@ public class ConexionBluetooth extends AppCompatActivity {
 
         // Write the calibration code to the configuration registers
         mBluetoothLeService.writeCharacteristic(config, SensorTag.CALIBRATE_SENSOR_CODE);
-        mBluetoothLeService.waitIdle(GATT_TIMEOUT);
+        mBluetoothLeService.waitIdle(500);
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         BluetoothGattCharacteristic calibrationCharacteristic = serv
                 .getCharacteristic(SensorTagGatt.UUID_BAR_CALI);
         mBluetoothLeService.readCharacteristic(calibrationCharacteristic);
-        mBluetoothLeService.waitIdle(GATT_TIMEOUT);
+        mBluetoothLeService.waitIdle(500);
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private void getFirmwareRevison() {
@@ -533,7 +565,7 @@ public class ConexionBluetooth extends AppCompatActivity {
 
         // Write the calibration code to the configuration registers
         mBluetoothLeService.readCharacteristic(charFwrev);
-        mBluetoothLeService.waitIdle(GATT_TIMEOUT);
+        mBluetoothLeService.waitIdle(500);
 
     }
     private void onCharacteristicWrite(String uuidStr, int status) {
@@ -548,7 +580,7 @@ public class ConexionBluetooth extends AppCompatActivity {
 
                     MagnetometerCalibrationCoefficients.INSTANCE.val = v;
                     mMagCalibrateRequest = false;
-                    Toast.makeText(this, "Magnetómetro calibrado", Toast.LENGTH_SHORT)
+                    Toast.makeText(getApplication(), "Magnetómetro calibrado", Toast.LENGTH_SHORT)
                             .show();
                 }
             }
@@ -559,7 +591,7 @@ public class ConexionBluetooth extends AppCompatActivity {
 
                     BarometerCalibrationCoefficients.INSTANCE.heightCalibration = v.x;
                     mHeightCalibrateRequest = false;
-                    Toast.makeText(this, "Medición de la altura calibrada",
+                    Toast.makeText(getApplication(), "Medición de la altura calibrada",
                             Toast.LENGTH_SHORT).show();
                 }
             }
@@ -571,7 +603,7 @@ public class ConexionBluetooth extends AppCompatActivity {
 
         if (uuidStr.equals(SensorTagGatt.UUID_DEVINFO_FWREV.toString())) {
             mFwRev = new String(value, 0, 3);
-            Toast.makeText(this, "Firmware revision: " + mFwRev,Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplication(), "Firmware revision: " + mFwRev,Toast.LENGTH_LONG).show();
         }
 
         if (mIsSensorTag2)
@@ -659,7 +691,8 @@ public class ConexionBluetooth extends AppCompatActivity {
 
         // Characteristics descriptor readout done
         if (!mServicesRdy) {
-            setStatus("Failed to read services");
+            Toast.makeText(getApplication(), "Failed to read services",
+                    Toast.LENGTH_LONG).show();
         }
     }
     private void enableDataCollection(boolean enable) {
